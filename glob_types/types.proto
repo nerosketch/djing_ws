@@ -1,29 +1,39 @@
 syntax = "proto3";
 package glob_types;
 
+enum MessageType {
+    Unknown = 0;
+    NewTask = 1;
+    MessageNotify = 2;
+    DeviceNotify = 3;
+}
+
 
 message NewTaskEvent {
-    uint32 task_count = 1;
-    uint32 customer = 2;
-    uint32 author = 3;
-    uint32 recipients_count = 4;
-    repeated uint32 recipients = 5 [packed=true];
+    MessageType message_type = 1;
+    uint32 task_count = 2;
+    uint32 customer = 3;
+    uint32 author = 4;
+    uint32 recipients_count = 5;
+    repeated uint32 recipients = 6 [packed=true];
 }
 
 
 message MessageNotifyEvent {
-    uint32 chat_id = 1;
-    uint32 author_id = 2;
-    uint32 participants_len = 3;
-    repeated uint32 participants = 4 [packed=true];
-    uint32 length = 5;
-    string text = 6;
+    MessageType message_type = 1;
+    uint32 chat_id = 2;
+    uint32 author_id = 3;
+    uint32 participants_len = 4;
+    repeated uint32 participants = 5 [packed=true];
+    uint32 length = 6;
+    string text = 7;
 }
 
 
 message DeviceNotifyEvent {
-    uint32 device = 1;
-    uint32 Group = 2;
+    MessageType message_type = 1;
+    uint32 device = 2;
+    uint32 Group = 3;
 
     enum NotifyType {
         Unknown = 0;
@@ -31,5 +41,5 @@ message DeviceNotifyEvent {
         DeviceUp = 2;
         DeviceUnstable = 3;
     }
-    NotifyType notify_type = 3;
+    NotifyType notify_type = 4;
 }
