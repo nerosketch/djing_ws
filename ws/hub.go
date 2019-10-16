@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"../glob_types"
 	"container/list"
 )
 
@@ -29,10 +30,10 @@ func (h *Hub) WriteBroadcastMsg(msg []byte) {
 	h.broadcast <- msg
 }
 
-func (h *Hub) SubscribeClientEvent(fn *ClientDataEvent) {
+func (h *Hub) SubscribeClientEvent(fn *glob_types.DataEvent) {
 	h.eventFromClientListeners.PushBack(fn)
 }
-func (h *Hub) UnsubscribeClientEvent(fn *ClientDataEvent) {
+func (h *Hub) UnsubscribeClientEvent(fn *glob_types.DataEvent) {
 	for e := h.eventFromClientListeners.Front(); e != nil; e = e.Next() {
 		if fn == e.Value {
 			h.eventFromClientListeners.Remove(e)
@@ -56,7 +57,7 @@ func (h *Hub) Run() {
 			// Send data to listener callbacks
 			//log.Println("Got message from client in hub", message)
 			for e := h.eventFromClientListeners.Front(); e != nil; e = e.Next() {
-				ev := e.Value.(*ClientDataEvent)
+				ev := e.Value.(*glob_types.DataEvent)
 				go ev.Callback(message)
 			}
 

@@ -17,7 +17,7 @@ func main() {
 	//hub.WriteBroadcastMsg("sdfsdf")
 
 	// Subscribing to new data from clients
-	/*cde := ws.ClientDataEvent{
+	/*cde := DataEvent{
 		Callback: func(v []byte) {
 			log.Println("Got data from client in callback", v)
 		},

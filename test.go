@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./glob_types"
 	"./usock"
 	"log"
 	"os"
@@ -35,6 +36,12 @@ func main() {
 	signal.Notify(signalCh, os.Interrupt, os.Kill, syscall.SIGTERM)
 
 	sc := usock.NewSocket()
+	cde := glob_types.DataEvent{
+		Callback: func(v []byte) {
+			log.Println("Got data from socket in callback", v)
+		},
+	}
+	sc.SubscribeEvent(&cde)
 
 	go func() {
 		signalType := <-signalCh

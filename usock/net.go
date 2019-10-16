@@ -1,6 +1,9 @@
 package usock
 
 import (
+	"../glob_types"
+	"container/list"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -10,6 +13,7 @@ import (
 type Socket struct {
 	sockFname string
 	ln net.Listener
+	eventSubscribers list.List
 }
 
 func NewSocket() *Socket {
@@ -42,6 +46,18 @@ func (s *Socket) Stop() {
 	}
 }
 
+func (s *Socket) SubscribeEvent(ev *glob_types.DataEvent) {
+	s.eventSubscribers.PushBack(ev)
+}
+func (s *Socket) UnsubscribeEvent(ev *glob_types.DataEvent) {
+	for e := s.eventSubscribers.Front(); e != nil; e = e.Next() {
+		if ev == e.Value {
+			s.eventSubscribers.Remove(e)
+			break
+		}
+	}
+}
+
 
 func (s *Socket) Listen() {
 	// s.addr + ":" + strconv.FormatInt(int64(s.port), 10)
@@ -68,8 +84,18 @@ func (s *Socket) Listen() {
 		}
 		recLen, err := conn.Read(buf)
 		if err != nil {
-			log.Fatal("Error reading:", err.Error())
+			if err == io.EOF {
+				log.Println("Received empty data, continue")
+			}else{
+				log.Println("Error reading:", err.Error())
+			}
+			continue
 		}
-		log.Println("Received", recLen, "bytes:", buf[:recLen])
+
+		// send data to listener callbacks
+		for e := s.eventSubscribers.Front(); e != nil; e = e.Next() {
+			ev := e.Value.(*glob_types.DataEvent)
+			go ev.Callback(buf[:recLen])
+		}
 	}
 }
