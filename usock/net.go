@@ -60,11 +60,10 @@ func (s *Socket) UnsubscribeEvent(ev *glob_types.DataEvent) {
 
 
 func (s *Socket) Listen() {
-	// s.addr + ":" + strconv.FormatInt(int64(s.port), 10)
 	var err error
 	s.ln, err = net.Listen("unix", s.sockFname)
 	if err != nil {
-		log.Fatal("Failed to open socket")
+		log.Println("Failed to open socket")
 		return
 	}
 	defer s.Stop()
@@ -75,7 +74,7 @@ func (s *Socket) Listen() {
 	for {
 		conn, err := s.ln.Accept()
 		if err != nil {
-			log.Fatal("Failed to listen socket")
+			log.Println("Failed to listen socket")
 			return
 		}
 		if rderr := conn.SetReadDeadline(time.Now().Add(readWait)); rderr != nil {

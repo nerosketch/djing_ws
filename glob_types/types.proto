@@ -8,6 +8,9 @@ enum MessageType {
     DeviceNotify = 3;
 }
 
+message MessageHeader {
+    MessageType message_type = 1;
+}
 
 message NewTaskEvent {
     MessageType message_type = 1;
