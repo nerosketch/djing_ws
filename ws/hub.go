@@ -1,22 +1,18 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package ws
 
-// Hub maintains the set of active clients and broadcasts messages to the
-// clients.
+import (
+	"container/list"
+)
+
 type Hub struct {
 	// Registered clients.
-	clients map[*Client]bool
+	clients                  map[*Client]bool
+	eventFromClientListeners list.List
 
-	// Inbound messages from the clients.
 	broadcast chan []byte
 
-	// Register requests from the clients.
 	register chan *Client
 
-	// Unregister requests from clients.
 	unregister chan *Client
 }
 
@@ -33,6 +29,18 @@ func (h *Hub) WriteBroadcastMsg(msg []byte) {
 	h.broadcast <- msg
 }
 
+func (h *Hub) SubscribeClientEvent(fn *ClientDataEvent) {
+	h.eventFromClientListeners.PushBack(fn)
+}
+func (h *Hub) UnsubscribeClientEvent(fn *ClientDataEvent) {
+	for e := h.eventFromClientListeners.Front(); e != nil; e = e.Next() {
+		if fn == e.Value {
+			h.eventFromClientListeners.Remove(e)
+			break
+		}
+	}
+}
+
 func (h *Hub) Run() {
 	for {
 		select {
@@ -40,10 +48,18 @@ func (h *Hub) Run() {
 			h.clients[client] = true
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
 				close(client.send)
+				delete(h.clients, client)
 			}
 		case message := <-h.broadcast:
+			// Got messages from client
+			// Send data to listener callbacks
+			//log.Println("Got message from client in hub", message)
+			for e := h.eventFromClientListeners.Front(); e != nil; e = e.Next() {
+				ev := e.Value.(*ClientDataEvent)
+				go ev.Callback(message)
+			}
+
 			for client := range h.clients {
 				select {
 				case client.send <- message:
