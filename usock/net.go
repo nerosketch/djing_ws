@@ -9,6 +9,7 @@ import (
 
 type Socket struct {
 	sockFname string
+	ln net.Listener
 }
 
 func NewSocket() *Socket {
@@ -31,29 +32,32 @@ const (
 	//maxMessageSize = 512
 )
 
+func (s *Socket) Stop() {
+	log.Println("Free sock")
+	if er := s.ln.Close(); er != nil{
+		log.Println("Failed to close socket:", er.Error())
+	}
+	if er := os.Remove(s.sockFname); er != nil {
+		log.Println("Failed to remove socket file:", er.Error())
+	}
+}
+
 
 func (s *Socket) Listen() {
 	// s.addr + ":" + strconv.FormatInt(int64(s.port), 10)
-	ln, err := net.Listen("unix", s.sockFname)
+	var err error
+	s.ln, err = net.Listen("unix", s.sockFname)
 	if err != nil {
 		log.Fatal("Failed to open socket")
 		return
 	}
-	defer func() {
-		log.Println("Free sock")
-		if er := ln.Close(); er != nil{
-			log.Println("Failed to close socket:", er.Error())
-		}
-		if er := os.Remove(s.sockFname); er != nil {
-			log.Println("Failed to remove socket file:", er.Error())
-		}
-	}()
+	defer s.Stop()
 
 	log.Println("Listen...")
 
 	buf := make([]byte, 0xfff)
 	for {
-		conn, err := ln.Accept()
+		conn, err := s.ln.Accept()
 		if err != nil {
 			log.Fatal("Failed to listen socket")
 			return

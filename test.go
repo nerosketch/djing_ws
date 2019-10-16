@@ -1,6 +1,12 @@
 package main
 
-import "./usock"
+import (
+	"./usock"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+)
 
 func main() {
 	/*ev := glob_types.MessageNotifyEvent{
@@ -25,6 +31,18 @@ func main() {
 
 	ioutil.WriteFile("./test_dn.bin", dump, 0644)*/
 
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, os.Interrupt, os.Kill, syscall.SIGTERM)
+
 	sc := usock.NewSocket()
+
+	go func() {
+		signalType := <-signalCh
+		signal.Stop(signalCh)
+		log.Println("Exit command, received", signalType, ". Exiting...")
+		sc.Stop()
+		os.Exit(0)
+	}()
+
 	sc.Listen()
 }
