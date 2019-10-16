@@ -2,4 +2,7 @@ src/
 .idea/
 pkg/
 main
+*.htmlbin/
+bin/
+*.bin
 *.html

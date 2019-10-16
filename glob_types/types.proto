@@ -1,0 +1,35 @@
+syntax = "proto3";
+package glob_types;
+
+
+message NewTaskEvent {
+    uint32 task_count = 1;
+    uint32 customer = 2;
+    uint32 author = 3;
+    uint32 recipients_count = 4;
+    repeated uint32 recipients = 5 [packed=true];
+}
+
+
+message MessageNotifyEvent {
+    uint32 chat_id = 1;
+    uint32 author_id = 2;
+    uint32 participants_len = 3;
+    repeated uint32 participants = 4 [packed=true];
+    uint32 length = 5;
+    string text = 6;
+}
+
+
+message DeviceNotifyEvent {
+    uint32 device = 1;
+    uint32 Group = 2;
+
+    enum NotifyType {
+        Unknown = 0;
+        DeviceDown = 1;
+        DeviceUp = 2;
+        DeviceUnstable = 3;
+    }
+    NotifyType notify_type = 3;
+}
