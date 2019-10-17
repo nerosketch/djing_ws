@@ -3,6 +3,7 @@ package ws
 import (
 	"../glob_types"
 	"container/list"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"log"
 )
@@ -28,15 +29,64 @@ func NewHub() *Hub {
 	}
 }
 
-func (h *Hub) WriteBroadcastMsg(msg []byte) {
+
+type hubBroadcastWriter struct {
+	hb *Hub
+}
+func (w *hubBroadcastWriter) Write(p []byte) (n int, err error) {
+	w.hb.broadcast <-p
+	return len(p), nil
+}
+
+
+func (h *Hub) sendPB2WS_JSON(v []byte, ifs proto.Message) bool {
+	if msgErr := proto.Unmarshal(v, ifs); msgErr != nil {
+		log.Println("Error unmarshalling message:", msgErr)
+		return false
+	}
+	mrsh := jsonpb.Marshaler{}
+
+	w := &hubBroadcastWriter{hb: h,}
+	if err := mrsh.Marshal(w, ifs); err != nil {
+		log.Println("error marshalling message to JSON:", err)
+		return false
+	}
+	return true
+}
+
+
+func (h *Hub) WriteBroadcastMsg(v []byte) {
 	// Converts from binary to json
 	hdr := glob_types.MessageHeader{}
 	//TODO: сделать перевод из бинаря в JSON
 	// получать тип сообщения уже получилось, в hdr
-	if err := proto.Unmarshal(msg, &hdr); err != nil {
-		log.Println("Error unmarshalling broadcast message:", err)
+
+	if err := proto.Unmarshal(v, &hdr); err != nil {
+		log.Println("Error unmarshalling broadcast message header:", err)
+		return
 	}
-	h.broadcast <- msg
+
+	// Converts PB binary message to JSON
+	var isOk = false
+	switch hdr.MessageType {
+	case glob_types.MessageType_NewTask:
+		msg := glob_types.NewTaskEvent{}
+		isOk = h.sendPB2WS_JSON(v, &msg)
+	case glob_types.MessageType_MessageNotify:
+		msg := glob_types.MessageNotifyEvent{}
+		isOk = h.sendPB2WS_JSON(v, &msg)
+	case glob_types.MessageType_DeviceNotify:
+		msg := glob_types.DeviceNotifyEvent{}
+		isOk = h.sendPB2WS_JSON(v, &msg)
+	default:
+		log.Println("Unknown hdr message type:", hdr.MessageType)
+		return
+	}
+
+	if !isOk {
+		log.Println("Failed marshaling PB 2 JSON")
+	}
+
 }
 
 func (h *Hub) SubscribeClientEvent(fn *glob_types.DataEvent) {
