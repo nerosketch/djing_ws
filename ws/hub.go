@@ -2,6 +2,7 @@ package ws
 
 import (
 	"../glob_types"
+	"bytes"
 	"container/list"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -30,15 +31,6 @@ func NewHub() *Hub {
 }
 
 
-type hubBroadcastWriter struct {
-	hb *Hub
-}
-func (w *hubBroadcastWriter) Write(p []byte) (n int, err error) {
-	w.hb.broadcast <-p
-	return len(p), nil
-}
-
-
 func (h *Hub) sendPB2WS_JSON(v []byte, ifs proto.Message) bool {
 	if msgErr := proto.Unmarshal(v, ifs); msgErr != nil {
 		log.Println("Error unmarshalling message:", msgErr)
@@ -46,11 +38,13 @@ func (h *Hub) sendPB2WS_JSON(v []byte, ifs proto.Message) bool {
 	}
 	mrsh := jsonpb.Marshaler{}
 
-	w := &hubBroadcastWriter{hb: h,}
-	if err := mrsh.Marshal(w, ifs); err != nil {
+	//w := &hubBroadcastWriter{hb: h,}
+	var buf bytes.Buffer
+	if err := mrsh.Marshal(&buf, ifs); err != nil {
 		log.Println("error marshalling message to JSON:", err)
 		return false
 	}
+	h.broadcast <- buf.Bytes()
 	return true
 }
 
@@ -58,8 +52,6 @@ func (h *Hub) sendPB2WS_JSON(v []byte, ifs proto.Message) bool {
 func (h *Hub) WriteBroadcastMsg(v []byte) {
 	// Converts from binary to json
 	hdr := glob_types.MessageHeader{}
-	//TODO: сделать перевод из бинаря в JSON
-	// получать тип сообщения уже получилось, в hdr
 
 	if err := proto.Unmarshal(v, &hdr); err != nil {
 		log.Println("Error unmarshalling broadcast message header:", err)
