@@ -17,8 +17,7 @@ message NewTaskEvent {
     uint32 task_count = 2;
     uint32 customer = 3;
     uint32 author = 4;
-    uint32 recipients_count = 5;
-    repeated uint32 recipients = 6 [packed=true];
+    repeated uint32 recipients = 5 [packed=true];
 }
 
 
@@ -26,10 +25,9 @@ message MessageNotifyEvent {
     MessageType message_type = 1;
     uint32 chat_id = 2;
     uint32 author_id = 3;
-    uint32 participants_len = 4;
-    repeated uint32 participants = 5 [packed=true];
-    uint32 length = 6;
-    string text = 7;
+    repeated uint32 participants = 4 [packed=true];
+    uint32 length = 5;
+    string text = 6;
 }
 
 
