@@ -2,11 +2,7 @@ package ws
 
 import (
 	"../glob_types"
-	"bytes"
 	"container/list"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
-	"log"
 )
 
 type Hub struct {
@@ -31,7 +27,7 @@ func NewHub() *Hub {
 }
 
 
-func (h *Hub) sendPB2WS_JSON(v []byte, ifs proto.Message) bool {
+/*func (h *Hub) sendPB2WS_JSON(v []byte, ifs proto.Message) bool {
 	if msgErr := proto.Unmarshal(v, ifs); msgErr != nil {
 		log.Println("Error unmarshalling message:", msgErr)
 		return false
@@ -46,12 +42,12 @@ func (h *Hub) sendPB2WS_JSON(v []byte, ifs proto.Message) bool {
 	}
 	h.broadcast <- buf.Bytes()
 	return true
-}
+}*/
 
 
 func (h *Hub) WriteBroadcastMsg(v []byte) {
 	// Converts from binary to json
-	hdr := glob_types.MessageHeader{}
+	/*hdr := glob_types.MessageHeader{}
 
 	if err := proto.Unmarshal(v, &hdr); err != nil {
 		log.Println("Error unmarshalling broadcast message header:", err)
@@ -77,7 +73,9 @@ func (h *Hub) WriteBroadcastMsg(v []byte) {
 
 	if !isOk {
 		log.Println("Failed marshaling PB 2 JSON")
-	}
+	}*/
+
+	h.broadcast <- v
 
 }
 

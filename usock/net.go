@@ -6,19 +6,18 @@ import (
 	"io"
 	"log"
 	"net"
-	"os"
 	"time"
 )
 
 type Socket struct {
-	sockFname string
+	netListen string
 	ln net.Listener
 	eventSubscribers list.List
 }
 
 func NewSocket() *Socket {
 	return &Socket{
-		sockFname: "/run/djing_ws.sock",
+		netListen: "127.0.0.1:3211",
 	}
 }
 
@@ -37,12 +36,9 @@ const (
 )
 
 func (s *Socket) Stop() {
-	log.Println("Free sock")
+	//log.Println("Free sock")
 	if er := s.ln.Close(); er != nil{
 		log.Println("Failed to close socket:", er.Error())
-	}
-	if er := os.Remove(s.sockFname); er != nil {
-		log.Println("Failed to remove socket file:", er.Error())
 	}
 }
 
@@ -61,7 +57,7 @@ func (s *Socket) UnsubscribeEvent(ev *glob_types.DataEvent) {
 
 func (s *Socket) Listen() {
 	var err error
-	s.ln, err = net.Listen("unix", s.sockFname)
+	s.ln, err = net.Listen("tcp", s.netListen)
 	if err != nil {
 		log.Println("Failed to open socket")
 		return
