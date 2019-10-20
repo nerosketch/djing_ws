@@ -17,7 +17,7 @@ type Socket struct {
 
 func NewSocket() *Socket {
 	return &Socket{
-		netListen: "127.0.0.1:3211",
+		netListen: "0.0.0.0:3211",
 	}
 }
 
